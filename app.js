@@ -28,8 +28,9 @@ app.post('/primer1/login', (req, res) => {
 
     console.log("Login attempt:", { username, password });
 
-    const query = "SELECT title FROM user WHERE username = ? AND password = ?";
-    db.get(query, [username, password], (err, row) => {
+    const query = "SELECT title FROM user WHERE username = '" + username + "' AND password = '" + password + "'" ;
+	console.log('QUERY: ' + query);
+    db.get(query, (err, row) => {
         if (err) {
             console.error('ERROR', err);
             res.redirect("/pages/example_1.html#error");

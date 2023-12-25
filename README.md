@@ -14,5 +14,13 @@ If you want to use nodemon:
 
 ```nodemon app.js```
 
+Landing page:
+
+```http://localhost:3000/```
+
 ## Examples
 
+### Example 1
+
+username:  `nesto' OR 1=1; --`
+password: any
