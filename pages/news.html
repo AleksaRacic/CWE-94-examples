@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>News Page</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container mt-4">
+        <div class="row">
+            <div class="col">
+                <input type="text" id="searchQuery" class="form-control" placeholder="Search news titles...">
+            </div>
+            <div class="col-auto">
+                <button id="searchBtn" class="btn btn-primary">Search</button>
+            </div>
+        </div>
+        <div id="newsList" class="mt-3">
+
+        </div>
+		<div class="mt-4">
+            <h2>Add News</h2>
+            <form id="addNewsForm" action="/news" method="post">
+                <div class="form-group">
+                    <label for="newsTitle">Title</label>
+                    <input type="text" class="form-control" id="newsTitle" name="title" required>
+                </div>
+                <button type="submit" class="btn btn-success">Submit</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Bootstrap and jQuery -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+
+    <script>
+
+		const loadNews = function() {
+            var searchQuery = document.getElementById('searchQuery').value;
+            fetch(`/search?search=${encodeURIComponent(searchQuery)}&user=user`)
+                .then(response => response.json())
+                .then(data => {
+                    var newsList = document.getElementById('newsList');
+                    newsList.innerHTML = '';
+                    data.forEach(news => {
+                        newsList.innerHTML += `<div class="card mt-2"><div class="card-body">${news.title}</div><div class="card-body">owner: ${news.owner}</div></div>`;
+                    });
+                })
+                .catch(error => console.error('Error:', error));
+        }
+		loadNews();
+        document.getElementById('searchBtn').addEventListener('click',loadNews);
+    </script>
+</body>
+</html>
