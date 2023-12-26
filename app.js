@@ -90,7 +90,7 @@ app.get('/list', (req, res) => {
 	const folder = req.query.folder;
 	if (folder) {
 	  // Run the command with the parameter the user gives us
-	  exec(`dir ${folder}`, (error, stdout, stderr) => {
+	  exec(`ls -l ${folder}`, (error, stdout, stderr) => {
 		let output = stdout;
 		if (error) {
 		  // If there are any errors, show that
