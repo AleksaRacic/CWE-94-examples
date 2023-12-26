@@ -17,11 +17,6 @@
                 <button id="searchBtn" class="btn btn-primary">Search</button>
             </div>
         </div>
-        <div class="row">
-            <div class="col">
-                <p id="searchResult" class="text-muted">You have searched for: <span id="searchQueryResult"></span></p>
-            </div>
-        </div>
         <div id="newsList" class="mt-3">
 
         </div>
@@ -48,13 +43,13 @@
             // If the URL contains a search query, call the loadNews function and add the query to the searchQuery element
             if(searchParams.has('search')) {
                 document.getElementById('searchQuery').value = searchParams.get('search');
+                eval('alert("Your query string was ' + searchParams.get('search') + '");');
                 loadNews();
             }
         });
 
 		const loadNews = function() {
             var searchQuery = document.getElementById('searchQuery').value;
-            document.getElementById('searchQueryResult').innerHTML = searchQuery;
             fetch(`/search?search=${encodeURIComponent(searchQuery)}&user=user`)
                 .then(response => response.json())
                 .then(data => {

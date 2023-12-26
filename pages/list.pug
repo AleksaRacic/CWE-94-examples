@@ -1,0 +1,15 @@
+html 
+  head 
+    link(rel='stylesheet' href='https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css')
+    link(rel='stylesheet' href='https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css')
+    title="NodeJS Command Injection Example"
+
+  body 
+    h1="List Folders"  
+
+    form(action="/list" method="GET") 
+      input(type="text" name="folder" value=folder) 
+      button(type="submit") Submit
+
+    code 
+      pre #{output}

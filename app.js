@@ -2,6 +2,8 @@ const sqlite3 = require('sqlite3').verbose();
 const express = require('express');
 const bodyParser = require('body-parser');
 const path = require('path');
+const {exec} = require('child_process');
+const pug = require('pug');
 
 const app = express();
 app.use(express.static(path.join(__dirname, '.')));
@@ -57,14 +59,17 @@ app.get('/news', (req, res) => {
     res.sendFile(path.join(__dirname, '/pages/news.html'));
 });
 
+app.get('/news_alert', (req, res) => {
+	res.sendFile(path.join(__dirname, '/pages/news_alert.html'));
+});
+
 app.get('/search', (req, res) => {
 
     const searchQuery = req.query.search;
-	var query = "SELECT * FROM news WHERE owner = 'user'";
     if (searchQuery) {
 		query = "SELECT * FROM news WHERE title LIKE '%" + searchQuery + "%' AND owner = 'user'";
     }else{
-		
+		query = "SELECT * FROM news WHERE owner = 'user'";
 	}
 
 	console.log('Search query: ' + searchQuery);
@@ -80,6 +85,25 @@ app.get('/search', (req, res) => {
         }
     });
 });
+
+app.get('/list', (req, res) => {
+	const folder = req.query.folder;
+	if (folder) {
+	  // Run the command with the parameter the user gives us
+	  exec(`dir ${folder}`, (error, stdout, stderr) => {
+		let output = stdout;
+		if (error) {
+		  // If there are any errors, show that
+		  output = error; 
+		}
+		res.send(
+		  pug.renderFile('./pages/list.pug', {output: output, folder: folder})
+		);
+	  });
+	} else {
+	  res.send(pug.renderFile('./pages/list.pug', {}));
+	}
+  });
 
 app.post('/news', (req, res) => {
 
@@ -105,8 +129,6 @@ app.post('/news', (req, res) => {
 	});
 
 });
-
-
 
 
 app.listen(3000, () => {
