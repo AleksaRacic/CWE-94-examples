@@ -55,7 +55,7 @@ Create new news with title: ` <img src=x onerror="alert(6)"/>`
 ### Example 7
 
 Page: /news_alert
-Clicking on link: `http://localhost:3000/news_alert?search=0%22);%20alert(document.cookie%2B%20%22`
+Clicking on link: `http://localhost:3000/news_alert?search=0%22);%20alert(7%2B%20%22`
 
 ### Example 8
 
