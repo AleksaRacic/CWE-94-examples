@@ -61,3 +61,15 @@ Clicking on link: `http://localhost:3000/news_alert?search=0%22);%20alert(7%2B%2
 
 Page: /list
 Enter as folder to list: `/usr; cat /etc/passwd`
+
+### Example 9 - html injection
+
+Page: /news
+Insert news with title: <a href="https://www.example.com" style="color: inherit; text-decoration: none;">Naslov</a>
+
+### Example 10 - Log4j
+
+1. instalirati go
+2. skinuti biblioteku za server koji simulira ldap server:`go install github.com/alexbakker/log4shell-tools/cmd/log4shell-tools-server`
+3. Na web stranici koju pokrene server pokrenuti test
+4. Pokrenuti java projekat logrinjection sa argumentom koji je prikazan na serveru
